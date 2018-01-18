@@ -36,6 +36,13 @@ public class CacheQa {
 		score = getPerformance(0, Arrays.asList("Jeju", "Pangyo", "Seoul", "NewYork", "LA"));
 		Assert.assertEquals(25, score);
 		logger.info("{}", score);
+
+		List<String> input = Arrays.asList("Jeju", "Pangyo", "Seoul", "NewYork", "LA");
+		LRUCache lruCache = new LRUCache(0);
+		for (String each : input) {
+			lruCache.get(each);
+		}
+		logger.info("LRU Cache result = {}", lruCache.getPerformance());
 	}
 
 	public int getPerformance(int cacheSize, List<String> input) {
@@ -82,6 +89,106 @@ public class CacheQa {
 			}
 
 			return hit;
+		}
+	}
+
+
+	class Node {
+		private Node pre;
+		private Node next;
+		private String data;
+
+		public Node(String data) {
+			this.data = data;
+		}
+
+		public Node(Node next, String data) {
+			this.next = next;
+			this.data = data;
+		}
+
+		public Node getPre() {
+			return pre;
+		}
+
+		public void setPre(Node pre) {
+			this.pre = pre;
+		}
+
+		public Node getNext() {
+			return next;
+		}
+
+		public void setNext(Node next) {
+			this.next = next;
+		}
+
+		public String getData() {
+			return data;
+		}
+
+		public void setData(String data) {
+			this.data = data;
+		}
+	}
+
+	class LRUCache {
+		private int capacity;
+		private Map<String, Node> map = new HashMap<>();
+		private Node head;
+		private Node tail;
+		private int performance = 0;
+
+		public LRUCache(int capacity) {
+			this.capacity = capacity;
+		}
+
+		public String get(String input) {
+			Node node = map.get(input);
+
+			// 캐시 미스
+			if (node == null) {
+				performance += 5;
+				node = new Node(input);
+
+				setHead(node);
+				map.put(input, node);
+
+				// 초과할 경우 tail 삭제 후 tail 갱신
+				if (map.size() > capacity) {
+					map.remove(tail.getData());
+					if (map.size() != 0) {
+						tail.getPre().setNext(null);
+						tail = tail.getPre();
+					} else {
+						tail = null;
+						head = null;
+					}
+				}
+
+			// 캐시 적중
+			} else {
+				performance += 1;
+				setHead(node);
+			}
+
+			// re-ordering
+			return node.getData();
+		}
+
+		protected void setHead(Node node) {
+			if (head == null) {
+				head = node;
+				tail = node;
+			} else {
+				head.setPre(node);
+				node.setNext(head);
+				head = node;
+			}
+		}
+
+		public int getPerformance() {
+			return performance;
 		}
 	}
 }
